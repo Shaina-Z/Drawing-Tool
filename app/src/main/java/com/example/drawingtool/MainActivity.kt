@@ -1,6 +1,5 @@
 package com.example.drawingtool
 
-import android.graphics.Color
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -23,29 +22,32 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material3.Button
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp
-import com.example.drawingtool.Blue
-import com.example.drawingtool.LightGray
-import com.example.drawingtool.Red
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import com.example.drawingtool.ui.theme.DrawingToolTheme
 
 
-private val Unit.Red: Any
-private val Unit.LightGray: Any
+
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,20 +55,79 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             DrawingToolTheme {
-
+                DrawingCanvas()
             }
         }
     }
 }
 
 @Composable
-fun ToolPanel(){
+fun DrawingCanvas() {
 
-}
-@Composable
-fun DrawingCanvas(){
+    var currentColor by remember { mutableStateOf(Color.Red) }
+    var brushSize by remember { mutableFloatStateOf(10f) }
+    var isEraser by remember { mutableStateOf(false) }
 
+    val lines = remember { mutableStateListOf<Line>() }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            ColorPicker { selectedColor ->
+                currentColor = selectedColor
+                isEraser = false
+            }
+
+            BrushSizeSelector(
+                currentSize = brushSize,
+                onSizeSelected = { newSize -> brushSize = newSize },
+                isEraser = isEraser,
+                keepMode = { keep -> isEraser = keep }
+            )
+
+            Button(onClick = { isEraser = true }) { Text("Eraser") }
+
+            Button(onClick = { lines.clear() }) { Text("Reset") }
+        }
+        Canvas(modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+            .pointerInput(true) {
+                detectDragGestures { change, dragAmount ->
+                    change.consume()
+                    val line = Line(
+                        start = change.position - dragAmount,
+                        end = change.position,
+                        color = if (isEraser) Color.White else currentColor,
+                        strokeWidth = brushSize
+
+                    )
+                    lines.add(line)
+                }
+            }
+        ){
+                lines.forEach{line->
+                    drawLine(
+                        color=line.color,
+                        start=line.start,
+                        end=line.end,
+                        strokeWidth=line.strokeWidth,
+                        cap = StrokeCap.Round
+                    )
+                }
+    }
+
+        }
 }
+
+
+
 
 
 @Composable
@@ -138,6 +199,5 @@ data class Line(val start: Offset,
 fun DrawingPreview() {
     DrawingToolTheme {
         DrawingCanvas()
-        ToolPanel()
     }
 }
