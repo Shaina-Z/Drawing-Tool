@@ -1,5 +1,5 @@
 ## Installation
--Download the source code and import it into Android Studio
+- Download the source code and import it into Android Studio
 ## How to Use the Drawing Tool
 - Use the Color Picker to choose between the three colors (Red, Blue, Yellow)
 - Type in your desired brush size
